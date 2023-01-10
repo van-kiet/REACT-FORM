@@ -1,12 +1,13 @@
 * {
   font-family: "Source Sans Pro", sans-serif;
 }
+
 .content {
   background-image: url("../../../public/images/wallpaperflare.com_wallpaper\ \(9\).jpg");
   background-repeat: no-repeat;
   background-position: center right;
   background-size: cover;
-  height: 1000px;
+  height: 100vh;
   padding-top: 20px;
 }
 #timSv {

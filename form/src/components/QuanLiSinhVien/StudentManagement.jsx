@@ -1,8 +1,17 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 class StudentManagement extends Component {
+  state = {
+    keyword: "",
+  };
   renderStudentList = () => {
-    return this.props.studentList.map((ele) => {
+    const filterData = this.props.studentList.filter((ele) => {
+      return (
+        ele.hoTen.toLowerCase().indexOf(this.state.keyword.toLowerCase()) !== -1
+      );
+    });
+
+    return filterData.map((ele) => {
       return (
         <tr key={ele.id}>
           <td>{ele.maSv}</td>
@@ -32,6 +41,7 @@ class StudentManagement extends Component {
       type: "SET_SELECTED_STUDENT",
       payload: user,
     });
+    document.getElementById("add").innerHTML = "Cập nhật";
   };
   deleteStudent = (user) => {
     this.props.dispatch({
@@ -56,6 +66,9 @@ class StudentManagement extends Component {
                 type="text"
                 className="form-control"
                 placeholder="Nhập tên sinh viên..."
+                onChange={(event) =>
+                  this.setState({ keyword: event.target.value })
+                }
               />
             </div>
             <div className="col-12">

@@ -2,22 +2,42 @@ import React, { Component } from "react";
 import "./style.css";
 import { connect } from "react-redux";
 class RegisterForm extends Component {
+  constructor(props) {
+    super(props);
+    this.maSvInputRef = React.createRef();
+  }
   state = {
-    values: { maSv: "", hoTen: "  ", sdt: "", email: "" },
-    errors: { maSv: "", hoTen: "  ", sdt: "", email: "" },
+    values: { maSv: "", hoTen: "", sdt: "", email: "" },
+    errors: { maSv: "", hoTen: "", sdt: "", email: "" },
   };
+
+  //handleChange======================================
+
   handleChange = (event) => {
     const { name, value } = event.target;
+
     this.setState({
       values: { ...this.state.values, [name]: value },
     });
   };
+
+  //submit=============================================
+
   handleSubmit = (event) => {
     event.preventDefault();
     const isValid = event.target.checkValidity();
+    const checkErrorsMaSv = this.state.errors.maSv;
+    const maSvInputRef = this.maSvInputRef.current.value;
 
-    if (!isValid) {
-      alert("Kiểm tra form kìa");
+    if (maSvInputRef.length < 5) {
+      alert("Vui lòng kiểm tra lại thông tin!");
+      return;
+    }
+    if (checkErrorsMaSv === "*Mã sinh viên đã tồn tại!") {
+      alert("Vui lòng kiểm tra lại thông tin!");
+      return;
+    } else if (!isValid) {
+      alert("Vui lòng kiểm tra lại thông tin!");
       return;
     }
     if (this.props.selectedStudent) {
@@ -25,19 +45,39 @@ class RegisterForm extends Component {
         type: "UPDATE_STUDENT",
         payload: this.state.values,
       });
+      alert("Cập nhật thành công.");
+      document.getElementById("Masv").disabled = false;
+      document.getElementById("add").innerHTML = "Thêm sinh viên";
     } else {
       this.props.dispatch({
         type: "ADD_STUDENT",
         payload: this.state.values,
       });
+      alert("Thêm sinh viên thành công.");
     }
+    this.setState({ values: "", errors: "" });
   };
+
+  //hadneBlur=========================================
+
   handleBlur = (event) => {
     let message = "";
-    console.log(event.target.validity);
-    const { name, validity, title, minLength, maxLength } = event.target;
+    const data = this.props.studentList;
+    const { name, value, validity, title, minLength, maxLength } = event.target;
     const { valueMissing, tooShort, patternMismatch } = validity;
+    const maSvInputRef = this.maSvInputRef.current.value;
 
+    if (name === "maSv" && maSvInputRef.length < 5) {
+      message = "Mã sinh viên từ 5 đến 6 kí tự!";
+    }
+    if (name === "maSv") {
+      for (let i in data) {
+        if (data[i].maSv === value) {
+          message = "*Mã sinh viên đã tồn tại!";
+          break;
+        }
+      }
+    }
     if (valueMissing) {
       message = `*Vui lòng điền vào ô này!`;
     }
@@ -55,15 +95,33 @@ class RegisterForm extends Component {
       errors: { ...this.state.errors, [name]: message },
     });
   };
+
+  //getDerivedStateFromProps============================================
+
   static getDerivedStateFromProps(nextProps, currentState) {
     if (
       nextProps.selectedStudent &&
       currentState.values.id !== nextProps.selectedStudent.id
     ) {
       currentState.values = nextProps.selectedStudent;
+      currentState.errors = "";
     }
     return currentState;
   }
+
+  //reset==========================================
+
+  handleReset = () => {
+    this.props.dispatch({
+      type: "RESET",
+    });
+    this.setState({
+      values: "",
+      errors: "",
+    });
+    document.getElementById("Masv").disabled = false;
+    document.getElementById("add").innerHTML = "Thêm sinh viên";
+  };
   render() {
     const {
       maSv = "",
@@ -84,6 +142,7 @@ class RegisterForm extends Component {
                   <div className="form-group">
                     <label htmlFor="Masv">Mã sinh viên</label>
                     <input
+                      ref={this.maSvInputRef}
                       value={maSv}
                       pattern="^[0-9]*$"
                       title="Mã sinh viên"
@@ -116,7 +175,7 @@ class RegisterForm extends Component {
                       id="Hoten"
                       minLength={1}
                       maxLength={32}
-                      pattern="^[a-zA-Z_ÀÁÂÃÈÉÊẾÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêếìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\ ]+$/gm"
+                      pattern="^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂẾưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỬỮỰỲỴÝỶỸửữựỳỵỷỹ\s\W|_]+$"
                       className="form-control"
                       placeholder="Nhập vào tên sinh viên ..."
                       aria-describedby="helpName"
@@ -175,14 +234,15 @@ class RegisterForm extends Component {
                 </div>
               </div>
               <div className="card-footer text-muted">
-                <button className="btn btn-outline-dark mr-2">
+                <button id="add" className="btn btn-outline-dark mr-2">
                   Thêm sinh viên
                 </button>
                 <button
-                  style={{ display: "none" }}
-                  className="btn btn-warning mr-2"
+                  onClick={() => this.handleReset()}
+                  type="reset"
+                  className="btn btn-outline-secondary mr-2"
                 >
-                  Lưu
+                  Reset
                 </button>
               </div>
             </form>
@@ -194,6 +254,7 @@ class RegisterForm extends Component {
 }
 const mapStateToProps = (state) => {
   return {
+    studentList: state.studentReducer.studentList,
     selectedStudent: state.studentReducer.selectedStudent,
   };
 };

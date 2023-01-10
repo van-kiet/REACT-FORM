@@ -27,6 +27,10 @@ export const studentReducer = (state = DEFAULT_STATE, action) => {
       break;
     case "SET_SELECTED_STUDENT":
       state.selectedStudent = payload;
+      document.getElementById("Masv").disabled = true;
+      break;
+    case "RESET":
+      state.selectedStudent = null;
       break;
     case "DELETE_STUDENT":
       state.studentList = state.studentList.filter((ele) =>
